@@ -1,0 +1,7 @@
+host: https://host.name/index.php?
+user: user
+pass: pass
+pages:
+  shiftlist: c=shift&m=shiftlist&show=50
+  shift: c=shift&m=shift&id=
+path_feed: public/shifts.ics
