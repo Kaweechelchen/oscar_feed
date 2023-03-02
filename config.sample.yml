@@ -5,3 +5,6 @@ pages:
   shiftlist: c=shift&m=shiftlist&show=50
   shift: c=shift&m=shift&id=
 path_feed: public/shifts.ics
+ics_feeds:
+  - name: GIS IT
+    url: https://host.name/ics/1234
