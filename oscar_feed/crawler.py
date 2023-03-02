@@ -160,8 +160,9 @@ def main():
   shift_ids = get_shift_ids(s)
   shifts = get_shifts(s, shift_ids)
 
-  for feed in cfg['ics_feeds']:
-    shifts += get_ics_shifts(feed)
+  if not len(cfg['ics_feeds']):
+    for feed in cfg['ics_feeds']:
+      shifts += get_ics_shifts(feed)
 
   shifts = concat_shifts(shifts)
   generate_ics(shifts)
