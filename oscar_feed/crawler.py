@@ -17,20 +17,20 @@ opt = utils.parse_command_line()
 
 class Shift:
   name: None
-  start: datetime
+  begin: datetime
   end: datetime
 
-  def __init__(self, name: str = None, start: datetime = None, end: datetime = None):
+  def __init__(self, name: str = None, begin: datetime = None, end: datetime = None):
     if name:
       self.name = name
-    if start:
-      self.start = start
+    if begin:
+      self.begin = begin
     if end:
       self.end = end
 
   def __iter__(self):
     yield 'name', self.name
-    yield 'start', self.start
+    yield 'begin', self.begin
     yield 'end', self.end
 
 
@@ -82,14 +82,14 @@ def get_shifts(s: requests.Session, ids: list[int]):
 
         date = pytz.timezone('Europe/Luxembourg').localize(datetime.strptime(row.find('th').text, '%d/%m/%y'))
 
-        time_start = date
+        time_begin = date
         time_end = date
       for idx, col in enumerate(row.find_all('td')):
         if idx == 0:
-          time = re.search('(?P<start_h>\d{2}):(?P<start_m>\d{2}) - (?P<end_h>\d{2}):(?P<end_m>\d{2})', col.text)
-          start_h = int(time.group('start_h'))
-          start_m = int(time.group('start_m'))
-          time_start = time_start.replace(hour=start_h, minute=start_m)
+          time = re.search('(?P<begin_h>\d{2}):(?P<begin_m>\d{2}) - (?P<end_h>\d{2}):(?P<end_m>\d{2})', col.text)
+          begin_h = int(time.group('begin_h'))
+          begin_m = int(time.group('begin_m'))
+          time_begin = time_begin.replace(hour=begin_h, minute=begin_m)
 
           end_h = int(time.group('end_h'))
           end_m = int(time.group('end_m'))
@@ -98,27 +98,38 @@ def get_shifts(s: requests.Session, ids: list[int]):
           time_end = time_end.replace(hour=end_h, minute=end_m)
 
         elif col.find('span', 'own-shift'):
-          shifts.append(Shift('Perma ' + shift_name, time_start, time_end))
+          shifts.append(Shift('Perma ' + shift_name, time_begin, time_end))
+
+  return shifts
+
+
+def get_ics_shifts(feed: dict[str, str]):
+  log.debug('Loading data for ICS feed %s', feed['name'])
+  calendar = Calendar(s.get(feed['url']).text)
+  shifts = []
+  for e in calendar.events:
+    e.end = parser.parse(str(e.end)) + timedelta(seconds=1)
+    shifts.append(Shift('Perma ' + feed['name'], parser.parse(str(e.begin)), parser.parse(str(e.end))))
 
   return shifts
 
 
 def concat_shifts(shifts: list[Shift]):
-  shifts = sorted(shifts, key=lambda k: k.start)
+  shifts = sorted(shifts, key=lambda k: k.begin)
 
-  combined_shifts = []
+  combined_shifts: list[Shift] = []
   combined_shift: Shift = None
   for shift in shifts:
     if not combined_shift:
-      # firt iteration
+      # first iteration
       combined_shift = shift
       continue
     if shift == combined_shift:
       # same shift again
       continue
-    if shift.start >= combined_shift.start and shift.end <= combined_shift.end:
+    if shift.begin >= combined_shift.begin and shift.end <= combined_shift.end:
       continue
-    elif combined_shift.end == shift.start and shift.name == shift.name:
+    elif combined_shift.end == shift.begin and combined_shift.name == shift.name:
       combined_shift.end = shift.end
     else:
       combined_shifts.append(combined_shift)
@@ -129,23 +140,13 @@ def concat_shifts(shifts: list[Shift]):
   return combined_shifts
 
 
-def generate_ics(shifts: list):
+def generate_ics(shifts: list[Shift]):
   cal = Calendar()
   for shift in shifts:
-    cal.events.add(Event(name=shift.name, begin=shift.start, end=shift.end))
+    cal.events.add(Event(name=shift.name, begin=shift.begin, end=shift.end))
 
   with open(config['path_feed'], 'w') as file:
     file.writelines(cal)
-
-
-def get_ics_shifts(feed: dict[str, str]):
-  calendar = Calendar(s.get(feed['url']).text)
-  shifts = []
-  for e in calendar.events:
-    e.end = parser.parse(str(e.end)) + timedelta(seconds=1)
-    shifts.append(Shift('Perma ' + feed['name'], parser.parse(str(e.begin)), parser.parse(str(e.end))))
-
-  return shifts
 
 
 cfg = utils.config
