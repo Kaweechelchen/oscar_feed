@@ -160,7 +160,7 @@ def main():
   shift_ids = get_shift_ids(s)
   shifts = get_shifts(s, shift_ids)
 
-  if not len(cfg['ics_feeds']):
+  if not cfg['ics_feeds'] or not len(cfg['ics_feeds']):
     for feed in cfg['ics_feeds']:
       shifts += get_ics_shifts(feed)
 
