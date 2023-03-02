@@ -110,13 +110,15 @@ def concat_shifts(shifts: list[Shift]):
   combined_shift: Shift = None
   for shift in shifts:
     if not combined_shift:
+      # firt iteration
       combined_shift = shift
       continue
     if shift == combined_shift:
+      # same shift again
       continue
     if shift.start >= combined_shift.start and shift.end <= combined_shift.end:
       continue
-    elif combined_shift.end == shift.start:
+    elif combined_shift.end == shift.start and shift.name == shift.name:
       combined_shift.end = shift.end
     else:
       combined_shifts.append(combined_shift)
