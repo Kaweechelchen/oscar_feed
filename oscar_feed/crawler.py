@@ -105,7 +105,9 @@ def get_shifts(s: requests.Session, ids: list[int]):
 
 def get_ics_shifts(feed: dict[str, str]):
   log.debug('Loading data for ICS feed %s', feed['name'])
-  calendar = Calendar(s.get(feed['url']).text)
+  text = s.get(feed['url']).text
+  text = re.sub(r"<!--(.|\s|\n)*?-->", "", text)
+  calendar = Calendar(text)
   shifts = []
   for e in calendar.events:
     e.end = parser.parse(str(e.end)) + timedelta(seconds=1)
@@ -162,11 +164,11 @@ def main():
   shifts = get_shifts(s, shift_ids)
 
   if cfg['ics_feeds'] and len(cfg['ics_feeds']):
-    try:
-      for feed in cfg['ics_feeds']:
+    for feed in cfg['ics_feeds']:
+      try:
         shifts += get_ics_shifts(feed)
-    except:
-      pass
+      except:
+        pass
 
   shifts = concat_shifts(shifts)
   generate_ics(shifts)
