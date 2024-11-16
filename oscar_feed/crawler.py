@@ -59,7 +59,7 @@ def get_shift_ids(s: requests.Session) -> list[int]:
   for link in links:
     href = link.get('href')
     if cfg['pages']['shift'] in href:
-      match = re.search(cfg['pages']['shift'] + '(?P<id>\d+)', href)
+      match = re.search(cfg['pages']['shift'] + r"(?P<id>\d+)", href)
       shift_ids.append(int(match.group('id')))
 
   return shift_ids
@@ -86,7 +86,7 @@ def get_shifts(s: requests.Session, ids: list[int]):
         time_end = date
       for idx, col in enumerate(row.find_all('td')):
         if idx == 0:
-          time = re.search('(?P<begin_h>\d{2}):(?P<begin_m>\d{2}) - (?P<end_h>\d{2}):(?P<end_m>\d{2})', col.text)
+          time = re.search(r'(?P<begin_h>\d{2}):(?P<begin_m>\d{2}) - (?P<end_h>\d{2}):(?P<end_m>\d{2})', col.text)
           begin_h = int(time.group('begin_h'))
           begin_m = int(time.group('begin_m'))
           time_begin = time_begin.replace(hour=begin_h, minute=begin_m)
@@ -145,7 +145,8 @@ def concat_shifts(shifts: list[Shift]):
 def generate_ics(shifts: list[Shift]):
   cal = Calendar()
   for shift in shifts:
-    cal.events.add(Event(name=shift.name, begin=shift.begin, end=shift.end))
+    if shift:
+      cal.events.add(Event(name=shift.name, begin=shift.begin, end=shift.end))
 
   with open(config['path_feed'], 'w') as file:
     file.writelines(cal)
