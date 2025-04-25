@@ -170,7 +170,7 @@ def generate_ics(name: str, shifts: list[Shift]):
         if shift:
             cal.events.add(Event(name=shift.name, begin=shift.begin, end=shift.end))
 
-    with open(f"{config["path_feed"]}/{name}.ics", "w") as file:
+    with open(f"{cfg['path_feed']}/{name}.ics", "w") as file:
         file.writelines(cal)
 
 
