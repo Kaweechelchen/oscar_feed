@@ -1,10 +1,20 @@
-host: https://host.name/index.php?
-user: user
-pass: pass
-pages:
-  shiftlist: c=shift&m=shiftlist&show=50
-  shift: c=shift&m=shift&id=
-path_feed: public/shifts.ics
-ics_feeds:
-  - name: GIS IT
-    url: https://host.name/ics/1234
+oscar:
+  host: https://osc.systems/index.php?
+  pages:
+    shiftlist: c=shift&m=shiftlist&show=50
+    shift: c=shift&m=shift&id=
+path_feed: public
+
+users:
+  - user_1:
+    oscar:
+      user: user
+      pass: pass
+    ics:
+      - name: GIT
+        url: https://host.name/ics/1234
+
+  - user_2:
+      ics:
+        - name: GIT
+          url: https://host.name/ics/2345
