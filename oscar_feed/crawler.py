@@ -193,7 +193,7 @@ def main():
         shifts = []
         if "oscar" in user:
             log.debug("oscar")
-            # shifts += oscar(user)
+            shifts += oscar(user)
         if "ics" in user:
             log.debug("ics")
             log.debug(user["ics"])
