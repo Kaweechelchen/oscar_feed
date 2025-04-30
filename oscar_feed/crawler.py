@@ -38,7 +38,7 @@ def oscar(user):
     log.debug(user)
     s = _new_session()
     login(s, user["oscar"])
-    return get_shifts(s, get_oscar_shift_ids(s))
+    return get_oscar_shifts(s, user["oscar"]["name"])
 
 
 def login(s: requests.Session, credentials: dict):
@@ -76,9 +76,9 @@ def get_oscar_shift_ids(s: requests.Session) -> list[int]:
     return shift_ids
 
 
-def get_shifts(s: requests.Session, ids: list[int]):
+def get_oscar_shifts(s: requests.Session, prepend_name: str):
     shifts = []
-    for id in ids:
+    for id in get_oscar_shift_ids(s):
         url = cfg["oscar"]["host"] + cfg["oscar"]["pages"]["shift"] + str(id)
         log.debug("Getting shift with ID %s @ %s", id, url)
         req = s.get(url)
@@ -114,7 +114,9 @@ def get_shifts(s: requests.Session, ids: list[int]):
                     time_end = time_end.replace(hour=end_h, minute=end_m)
 
                 elif col.find("span", "own-shift"):
-                    shifts.append(Shift("Perma " + shift_name, time_begin, time_end))
+                    shifts.append(
+                        Shift(f"{prepend_name} {shift_name}", time_begin, time_end)
+                    )
 
     return shifts
 
@@ -129,7 +131,7 @@ def ics(feed: dict[str, str]):
         e.end = parser.parse(str(e.end)) + timedelta(seconds=1)
         shifts.append(
             Shift(
-                "Perma " + feed["name"],
+                feed["name"],
                 parser.parse(str(e.begin)),
                 parser.parse(str(e.end)),
             )
